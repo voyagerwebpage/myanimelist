@@ -3,544 +3,739 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Anime Vault</title>
+    <title>Anime Vault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" type="image/png" href="favicon-16x16.png">
     <style>
-        /* --- CSS: Dark Theme & Layout --- */
         :root {
-            --bg-color: #121212;
-            --nav-bg: rgba(30, 30, 36, 0.85); /* Frosted glass effect */
-            --card-bg: #1e1e24;
-            --text-main: #e0e0e0;
-            --text-muted: #9e9e9e;
-            --accent-color: #bb86fc;
-            --accent-hover: #9965f4;
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface2: #1c1c26;
+            --border: rgba(255,255,255,0.07);
+            --accent: #e8b4ff;
+            --accent2: #7dd3fc;
+            --accent3: #fbbf24;
+            --text: #f0f0f5;
+            --muted: #6b7280;
+            --glow: rgba(232, 180, 255, 0.15);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-bottom: 50px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
         }
 
-        /* --- Navigation Bar --- */
+        /* Custom cursor — instant dot, no lag */
+        .cursor {
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s, height 0.15s, background 0.15s;
+            box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(232,180,255,0.3);
+        }
+
+        .cursor.hovering {
+            width: 20px; height: 20px;
+            background: rgba(232,180,255,0.3);
+            box-shadow: 0 0 16px var(--accent);
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.4;
+        }
+
+        /* NAV */
         nav {
-            position: sticky;
-            top: 0;
+            position: fixed;
+            top: 0; left: 0; right: 0;
             z-index: 1000;
-            background-color: var(--nav-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #333;
-            padding: 15px 20px;
+            padding: 0 5%;
+            height: 64px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
+            background: rgba(10,10,15,0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s;
         }
 
-        .nav-brand {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--accent-color);
+        nav.scrolled {
+            background: rgba(10,10,15,0.97);
+            box-shadow: 0 4px 40px rgba(0,0,0,0.5);
         }
 
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 20px;
+        .nav-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.08em;
+            text-decoration: none;
         }
 
         .nav-links {
             display: flex;
-            gap: 15px;
+            align-items: center;
+            gap: 8px;
         }
 
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1em;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .nav-btn:hover, .nav-btn.active {
-            color: #fff;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-btn.active {
-            border-bottom: 2px solid var(--accent-color);
-            border-radius: 6px 6px 0 0;
-        }
-
-        .search-bar {
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid #444;
-            background-color: #2a2a32;
-            color: #fff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-bar:focus {
-            border-color: var(--accent-color);
-        }
-
-        /* Hamburger Menu */
-        .hamburger {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            font-size: 1.5em;
-            cursor: pointer;
-        }
-
-        /* --- Main Content --- */
-        .container {
-            max-width: 1200px;
-            margin: 40px auto 0;
-            padding: 0 20px;
-        }
-
-        #statusMessage {
-            text-align: center;
-            color: var(--text-muted);
-            padding: 20px;
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid #333;
-        }
-
-        .section-header {
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .anime-count {
-            font-size: 0.6em;
-            color: var(--text-muted);
-        }
-
-        /* --- Grid & Cards --- */
-        .anime-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-            animation: fadeIn 0.4s ease;
-        }
-
-        .anime-card {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .anime-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.4);
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .anime-title {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-
-        .anime-link {
-            color: var(--accent-color);
+        .nav-link {
+            color: var(--muted);
             text-decoration: none;
             font-size: 0.9em;
-            align-self: flex-start;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            letter-spacing: 0.03em;
         }
 
-        .anime-link:hover {
-            text-decoration: underline;
+        .nav-link:hover {
+            color: var(--text);
+            background: rgba(255,255,255,0.06);
         }
 
-        /* Add this to your CSS */
-        .anime-cover {
-            width: 100%;
-            height: 320px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            background-color: #2a2a32; /* Dark placeholder color while loading */
+        .nav-cta {
+            background: linear-gradient(135deg, rgba(232,180,255,0.15), rgba(125,211,252,0.1));
+            border: 1px solid rgba(232,180,255,0.3);
+            color: var(--accent) !important;
+            border-radius: 8px;
+        }
+
+        .nav-cta:hover {
+            background: linear-gradient(135deg, rgba(232,180,255,0.25), rgba(125,211,252,0.2)) !important;
+            border-color: rgba(232,180,255,0.6) !important;
+        }
+
+        /* Hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: none;
+            padding: 8px;
+            border: none;
+            background: none;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s;
+            display: block;
+        }
+
+        .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 64px; left: 0; right: 0;
+            background: rgba(10,10,15,0.98);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 5%;
+            z-index: 999;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mobile-menu.open { display: flex; }
+        .mobile-menu .nav-link { font-size: 1em; padding: 12px 16px; }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 80px 5% 60px;
             position: relative;
             overflow: hidden;
         }
 
-        /* Optional: Adds a pulsing animation to the placeholder while it fetches */
-        .anime-cover.loading {
-            animation: pulse 1.5s infinite;
+        /* Animated background orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+            animation: drift 12s ease-in-out infinite alternate;
         }
 
-        @keyframes pulse {
-            0% { background-color: #2a2a32; }
-            50% { background-color: #3f3f4e; }
-            100% { background-color: #2a2a32; }
+        .orb-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #e8b4ff, transparent);
+            top: -100px; left: -100px;
+            animation-duration: 14s;
         }
 
-        /* --- Pagination --- */
-        .pagination {
+        .orb-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #7dd3fc, transparent);
+            bottom: -50px; right: -100px;
+            animation-duration: 10s;
+            animation-delay: -3s;
+        }
+
+        .orb-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #fbbf24, transparent);
+            top: 40%; left: 60%;
+            animation-duration: 18s;
+            animation-delay: -6s;
+            opacity: 0.07;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(40px, 30px) scale(1.05); }
+        }
+
+        /* Star field */
+        .stars {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
+            opacity: var(--o, 0.3);
+        }
+
+        @keyframes twinkle {
+            from { opacity: var(--o, 0.3); transform: scale(1); }
+            to { opacity: calc(var(--o, 0.3) * 0.3); transform: scale(0.5); }
+        }
+
+        .hero-eyebrow {
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            color: var(--accent2);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            opacity: 0;
+            animation: slideUp 0.8s ease forwards 0.3s;
+        }
+
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(3em, 10vw, 7em);
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.02em;
+            margin-bottom: 28px;
+            opacity: 0;
+            animation: slideUp 0.9s ease forwards 0.5s;
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+        }
+
+        .hero-sub {
+            font-size: clamp(1em, 2.5vw, 1.25em);
+            color: var(--muted);
+            max-width: 520px;
+            line-height: 1.7;
+            margin-bottom: 48px;
+            opacity: 0;
+            animation: slideUp 1s ease forwards 0.7s;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            animation: slideUp 1s ease forwards 0.9s;
+        }
+
+        .btn-primary {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, rgba(232,180,255,0.2), rgba(125,211,252,0.15));
+            border: 1px solid rgba(232,180,255,0.4);
+            color: var(--accent);
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+            font-size: 0.95em;
+            letter-spacing: 0.05em;
+            border-radius: 12px;
+            cursor: none;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(232,180,255,0.1), rgba(125,211,252,0.1));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary:hover::before { opacity: 1; }
+        .btn-primary:hover {
+            border-color: rgba(232,180,255,0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(232,180,255,0.15);
+        }
+
+        .btn-secondary {
+            padding: 14px 32px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            font-size: 0.95em;
+            letter-spacing: 0.05em;
+            border-radius: 12px;
+            cursor: none;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            color: var(--text);
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.04);
+        }
+
+        /* Scroll indicator */
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.75em;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1.5s;
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--muted), transparent);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes scrollPulse {
+            0%, 100% { transform: scaleY(1); opacity: 0.5; }
+            50% { transform: scaleY(1.2); opacity: 1; }
+        }
+
+        /* STATS STRIP */
+        .stats-strip {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 30px;
+            gap: 0;
+            padding: 0 5%;
+            margin: 0 auto 80px;
+            max-width: 900px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 40px 20px;
+            border: 1px solid var(--border);
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .stat-item:not(:first-child) { border-left: none; }
+        .stat-item:first-child { border-radius: 16px 0 0 16px; }
+        .stat-item:last-child { border-radius: 0 16px 16px 0; }
+
+        .stat-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .stat-num {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2em, 5vw, 3em);
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* MARQUEE */
+        .marquee-section {
+            padding: 60px 0;
+            overflow: hidden;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 80px;
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 40px;
+            white-space: nowrap;
+            animation: marquee 25s linear infinite;
+        }
+
+        .marquee-track:hover { animation-play-state: paused; }
+
+        .marquee-item {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85em;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .marquee-item span {
+            color: var(--accent);
+            margin: 0 20px;
+        }
+
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* CTA */
+        .cta-section {
+            padding: 80px 5% 120px;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-inner::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at center, rgba(232,180,255,0.05), transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.6em, 4vw, 2.2em);
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .cta-title.visible { opacity: 1; transform: translateY(0); }
+
+        .cta-sub {
+            color: var(--muted);
+            margin-bottom: 36px;
+            font-size: 1em;
+            line-height: 1.7;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease 0.1s;
+        }
+
+        .cta-sub.visible { opacity: 1; transform: translateY(0); }
+
+        .cta-btn {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease 0.2s;
+        }
+
+        .cta-btn.visible { opacity: 1; transform: translateY(0); }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .page-btn {
-            background-color: var(--card-bg);
-            border: 1px solid #444;
-            color: var(--text-main);
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .footer-brand {
+            font-family: 'Cinzel', serif;
+            font-size: 1em;
+            color: var(--accent);
+            letter-spacing: 0.1em;
         }
 
-        .page-btn:hover:not(:disabled) {
-            background-color: var(--accent-color);
-            color: #000;
+        .footer-note {
+            font-size: 0.8em;
+            color: var(--muted);
         }
 
-        .page-btn.active {
-            background-color: var(--accent-color);
-            color: #000;
-            border-color: var(--accent-color);
-        }
-
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- Mobile Responsive --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Mobile */
         @media (max-width: 768px) {
-            .hamburger { display: block; }
-            
-            .nav-controls {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background-color: var(--card-bg);
-                flex-direction: column;
-                align-items: stretch;
-                padding: 15px;
-                border-bottom: 1px solid #333;
-                display: none; /* Hidden by default */
-                box-shadow: 0 10px 15px rgba(0,0,0,0.5);
-            }
-
-            .nav-controls.show { display: flex; }
-
-            .nav-links {
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .nav-btn {
-                text-align: left;
-                padding: 12px;
-                border-radius: 4px;
-            }
-
-            .nav-btn.active {
-                border-bottom: none;
-                border-left: 3px solid var(--accent-color);
-            }
-
-            .search-bar { margin-top: 10px; }
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            .stats-strip { flex-direction: column; gap: 0; }
+            .stat-item { border-left: 1px solid var(--border) !important; }
+            .stat-item:first-child { border-radius: 16px 16px 0 0; border-bottom: none; }
+            .stat-item:last-child { border-radius: 0 0 16px 16px; }
+            .stat-item:not(:first-child):not(:last-child) { border-radius: 0; border-bottom: none; }
+            .cta-inner { padding: 40px 24px; }
+            footer { flex-direction: column; text-align: center; }
+            body { cursor: auto; }
+            .cursor { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="nav-brand">Akshat's Anime Vault</div>
-        <button class="hamburger" id="hamburgerBtn">☰</button>
-        <div class="nav-controls" id="navControls">
-            <div class="nav-links" id="navLinksContainer">
-                </div>
-            <input type="text" id="searchInput" class="search-bar" placeholder="Search anime...">
+    <div class="cursor" id="cursor"></div>
+
+    <nav id="navbar">
+        <a href="index.html" class="nav-logo">ANIME VAULT</a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="vault.html" class="nav-link">My List</a>
+            <a href="vault.html#analytics" class="nav-link">Analytics</a>
+            <a href="vault.html" class="nav-link nav-cta">Browse ↗</a>
         </div>
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </button>
     </nav>
 
-    <div class="container">
-        <div id="statusMessage">Fetching your anime vault...</div>
-        
-        <div id="mainContent" style="display: none;">
-            <div class="section-header">
-                <span id="currentCategoryTitle">All Anime</span>
-                <span class="anime-count" id="currentCategoryCount">0 Entries</span>
-            </div>
-            <div class="anime-grid" id="animeGrid"></div>
-            <div class="pagination" id="paginationControls"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="vault.html" class="nav-link">My List</a>
+        <a href="vault.html#analytics" class="nav-link">Analytics</a>
+        <a href="vault.html" class="nav-link nav-cta">Browse ↗</a>
+    </div>
+
+    <section class="hero">
+        <div class="stars" id="stars"></div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+
+        <p class="hero-eyebrow">✦ Personal Collection</p>
+        <h1 class="hero-title">
+            Welcome to<br>
+            <span>My Anime Vault</span>
+        </h1>
+        <p class="hero-sub">A curated archive of every series watched, scored, and remembered. Tracked with obsession, organised with care.</p>
+
+        <div class="hero-actions">
+            <a href="vault.html" class="btn-primary">Explore the Vault →</a>
+            <a href="vault.html#analytics" class="btn-secondary">View Analytics</a>
+        </div>
+
+        <div class="scroll-hint">
+            <span>Scroll</span>
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <div class="stats-strip" id="statsStrip">
+        <div class="stat-item">
+            <div class="stat-num" id="heroStatTotal">—</div>
+            <div class="stat-label">Titles Tracked</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" id="heroStatCompleted">—</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num" id="heroStatGenres">—</div>
+            <div class="stat-label">Unique Genres</div>
         </div>
     </div>
 
+    <div class="marquee-section">
+        <div class="marquee-track" id="marqueeTrack">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <section class="cta-section">
+        <div class="cta-inner">
+            <h2 class="cta-title">Ready to explore?</h2>
+            <p class="cta-sub">Dive into the full collection, filter by status, search by genre, and see the stats behind the watch history.</p>
+            <div class="cta-btn">
+                <a href="vault.html" class="btn-primary" style="font-size:1.05em; padding:16px 40px;">Enter the Vault →</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-brand">ANIME VAULT</div>
+        <div class="footer-note">Built with ♥ · Data from MyAnimeList via Jikan API</div>
+    </footer>
+
     <script>
-        // --- State Management ---
-        const xmlFileName = './animelist.xml'; 
-        let allAnime = []; // Holds every anime from the XML
-        let uniqueCategories = []; 
-        
-        // App State
-        let currentFilter = 'All';
-        let searchQuery = '';
-        let currentPage = 1;
-        const itemsPerPage = 24; // Number of cards per page
+        // Cursor — instant, no lag
+        const cursor = document.getElementById('cursor');
+        let mx = 0, my = 0;
 
-        // --- DOM Elements ---
-        const statusMsg = document.getElementById('statusMessage');
-        const mainContent = document.getElementById('mainContent');
-        const animeGrid = document.getElementById('animeGrid');
-        const navLinksContainer = document.getElementById('navLinksContainer');
-        const searchInput = document.getElementById('searchInput');
-        const categoryTitle = document.getElementById('currentCategoryTitle');
-        const categoryCount = document.getElementById('currentCategoryCount');
-        const paginationControls = document.getElementById('paginationControls');
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const navControls = document.getElementById('navControls');
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch(xmlFileName)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response.text();
-                })
-                .then(xmlString => {
-                    statusMsg.style.display = 'none';
-                    mainContent.style.display = 'block';
-                    parseXML(xmlString);              
-                })
-                .catch(error => {
-                    statusMsg.textContent = 'Failed to load animelist.xml. Ensure it is in the repository.';
-                    statusMsg.style.color = '#ff6b6b';
-                });
-
-            // Event Listeners for Search and Mobile Menu
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value;
-                currentPage = 1; // Reset to page 1 on new search
-                render();
-            });
-
-            hamburgerBtn.addEventListener('click', () => {
-                navControls.classList.toggle('show');
-            });
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX; my = e.clientY;
+            cursor.style.left = mx + 'px';
+            cursor.style.top = my + 'px';
         });
 
-        // --- Parsing XML ---
-        function parseXML(xmlString) {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-            const animes = xmlDoc.getElementsByTagName("anime");
+        document.querySelectorAll('a, button, .stat-item').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+        });
 
-            const categorySet = new Set();
-
-            for (let i = 0; i < animes.length; i++) {
-                const node = animes[i];
-                const titleNode = node.getElementsByTagName("series_title")[0];
-                const statusNode = node.getElementsByTagName("my_status")[0];
-                const idNode = node.getElementsByTagName("series_animedb_id")[0];
-
-                if (!titleNode || !statusNode) continue;
-
-                const title = titleNode.textContent;
-                const status = statusNode.textContent;
-                const id = idNode ? idNode.textContent : null;
-
-                allAnime.push({ title, status, id });
-                categorySet.add(status);
-            }
-
-            // Sort alphabetically for consistency
-            allAnime.sort((a, b) => a.title.localeCompare(b.title));
-            
-            // Build the Navigation tabs
-            uniqueCategories = ["All", ...Array.from(categorySet)];
-            buildNavigation();
-            render();
+        // Stars
+        const starsEl = document.getElementById('stars');
+        for (let i = 0; i < 80; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            s.style.cssText = `
+                left: ${Math.random() * 100}%;
+                top: ${Math.random() * 100}%;
+                --d: ${2 + Math.random() * 4}s;
+                --o: ${0.1 + Math.random() * 0.5};
+                animation-delay: ${Math.random() * 5}s;
+            `;
+            starsEl.appendChild(s);
         }
 
-        // --- Build UI Components ---
-        function buildNavigation() {
-            navLinksContainer.innerHTML = '';
-            
-            uniqueCategories.forEach(category => {
-                const btn = document.createElement('button');
-                btn.className = `nav-btn ${category === currentFilter ? 'active' : ''}`;
-                btn.textContent = category;
-                
-                btn.addEventListener('click', () => {
-                    currentFilter = category;
-                    currentPage = 1; // Reset to page 1 when changing tabs
-                    searchInput.value = ''; // Optional: clear search on tab change
-                    searchQuery = '';
-                    
-                    // Update active class
-                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    
-                    // Close mobile menu if open
-                    navControls.classList.remove('show');
-                    
-                    render();
-                });
-                
-                navLinksContainer.appendChild(btn);
-            });
+        // Nav scroll
+        window.addEventListener('scroll', () => {
+            document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+        });
+
+        // Mobile menu
+        function toggleMenu() {
+            document.getElementById('hamburger').classList.toggle('open');
+            document.getElementById('mobileMenu').classList.toggle('open');
         }
 
-        function render() {
-            const filteredData = allAnime.filter(anime => {
-                const matchesCategory = currentFilter === 'All' || anime.status === currentFilter;
-                const matchesSearch = anime.title.toLowerCase().includes(searchQuery.toLowerCase());
-                return matchesCategory && matchesSearch;
-            });
-
-            categoryTitle.textContent = currentFilter === 'All' ? 'All Anime' : currentFilter;
-            categoryCount.textContent = `${filteredData.length} Entries`;
-
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            if (currentPage > totalPages && totalPages > 0) currentPage = totalPages; 
-            
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
-
-            animeGrid.innerHTML = '';
-            
-            if (paginatedData.length === 0) {
-                animeGrid.innerHTML = `<p style="grid-column: 1/-1; color: var(--text-muted);">No anime found.</p>`;
-            } else {
-                paginatedData.forEach(anime => {
-                    const card = document.createElement('div');
-                    card.className = 'anime-card';
-
-                    // We add an <img> tag with a specific ID so we can target it later
-                    let html = `
-                        <img class="anime-cover loading" id="cover-${anime.id}" alt="Cover for ${anime.title}">
-                        <div class="anime-title">${anime.title}</div>
-                    `;
-                    
-                    if (anime.id) {
-                        html += `<a class="anime-link" href="https://myanimelist.net/anime/${anime.id}" target="_blank">View on MAL ↗</a>`;
-                    }
-                    
-                    card.innerHTML = html;
-                    animeGrid.appendChild(card);
-                });
-
-                // Trigger the sequential image fetcher for ONLY the cards currently visible
-                fetchImages(paginatedData);
-            }
-
-            renderPagination(totalPages);
-        }
-
-
-        function renderPagination(totalPages) {
-            paginationControls.innerHTML = '';
-            if (totalPages <= 1) return; // Hide pagination if only 1 page
-
-            // Prev Button
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn';
-            prevBtn.textContent = '← Prev';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.addEventListener('click', () => {
-                if (currentPage > 1) { currentPage--; render(); window.scrollTo(0,0); }
-            });
-            paginationControls.appendChild(prevBtn);
-
-            // Page Numbers (Simplified logic to show all pages, or a subset if you have many)
-            for (let i = 1; i <= totalPages; i++) {
-                // If you have a massive list, you might want to limit the buttons shown here.
-                // For now, it shows all page numbers.
-                const pageBtn = document.createElement('button');
-                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                pageBtn.textContent = i;
-                pageBtn.addEventListener('click', () => {
-                    currentPage = i; 
-                    render();
-                    window.scrollTo(0,0); // Scroll back to top of grid
-                });
-                paginationControls.appendChild(pageBtn);
-            }
-
-            // Next Button
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn';
-            nextBtn.textContent = 'Next →';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.addEventListener('click', () => {
-                if (currentPage < totalPages) { currentPage++; render(); window.scrollTo(0,0); }
-            });
-            paginationControls.appendChild(nextBtn);
-        }
-
-        async function fetchImages(animeList) {
-            for (const anime of animeList) {
-                if (!anime.id) continue;
-
-                const imgElement = document.getElementById(`cover-${anime.id}`);
-                
-                // Skip if this image has already been loaded
-                if (imgElement && imgElement.src) continue; 
-
-                try {
-                    const response = await fetch(`https://api.jikan.moe/v4/anime/${anime.id}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // Get the image URL from Jikan's response
-                        const imageUrl = data.data.images.jpg.large_image_url;
-                        
-                        if (imgElement) {
-                            imgElement.src = imageUrl;
-                            imgElement.classList.remove('loading'); // Stop the pulse animation
-                        }
-                    }
-                    
-                    // WAIT 400ms BEFORE THE NEXT REQUEST (Keeps us under 3 requests/sec)
-                    await new Promise(resolve => setTimeout(resolve, 400)); 
-                    
-                } catch (error) {
-                    console.error(`Failed to fetch image for ${anime.title}`, error);
-                    if (imgElement) imgElement.classList.remove('loading');
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, idx) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('visible'), idx * 80);
+                    observer.unobserve(entry.target);
                 }
-            }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.stat-item, .cta-title, .cta-sub, .cta-btn').forEach(el => observer.observe(el));
+
+        // Load data.json for stats & marquee
+        fetch('./data.json')
+            .then(r => r.json())
+            .then(data => {
+                const completed = data.filter(a => a.status === 'Completed').length;
+                const genres = new Set(data.flatMap(a => a.genres));
+
+                animateCount('heroStatTotal', data.length);
+                animateCount('heroStatCompleted', completed);
+                animateCount('heroStatGenres', genres.size);
+
+                // Marquee
+                const titles = data.map(a => a.title).sort(() => Math.random() - 0.5).slice(0, 20);
+                const track = document.getElementById('marqueeTrack');
+                const doubled = [...titles, ...titles];
+                track.innerHTML = doubled.map((t, i) => 
+                    `<span class="marquee-item">${t}${i % 3 === 1 ? '<span>✦</span>' : ''}</span>`
+                ).join('');
+            })
+            .catch(() => {
+                ['heroStatTotal','heroStatCompleted','heroStatScore','heroStatGenres'].forEach(id => {
+                    document.getElementById(id).textContent = '?';
+                });
+            });
+
+        function animateCount(id, target) {
+            const el = document.getElementById(id);
+            let current = 0;
+            const step = Math.ceil(target / 60);
+            const interval = setInterval(() => {
+                current = Math.min(current + step, target);
+                el.textContent = current;
+                if (current >= target) clearInterval(interval);
+            }, 20);
         }
     </script>
 </body>
