@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Vault</title>
+    <title>My Anime Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="favicon-16x16.png">
     <style>
         :root {
@@ -18,11 +19,9 @@
             --accent3: #fbbf24;
             --text: #f0f0f5;
             --muted: #6b7280;
-            --glow: rgba(232, 180, 255, 0.15);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         html { scroll-behavior: smooth; }
 
         body {
@@ -33,7 +32,7 @@
             cursor: none;
         }
 
-        /* Custom cursor — instant dot, no lag */
+        /* Cursor */
         .cursor {
             width: 8px; height: 8px;
             background: var(--accent);
@@ -43,20 +42,19 @@
             z-index: 99999;
             transform: translate(-50%, -50%);
             transition: width 0.15s, height 0.15s, background 0.15s;
-            box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(232,180,255,0.3);
+            box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(232,180,255,0.3);  /* ← the blur */
         }
-
         .cursor.hovering {
-            width: 20px; height: 20px;
-            background: rgba(232,180,255,0.3);
-            box-shadow: 0 0 16px var(--accent);
+            width: 28px; height: 28px;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
         }
 
-        /* Noise texture overlay */
+        /* Noise */
         body::before {
             content: '';
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
             pointer-events: none;
             z-index: 9998;
@@ -78,27 +76,19 @@
             border-bottom: 1px solid var(--border);
             transition: all 0.3s;
         }
-
         nav.scrolled {
             background: rgba(10,10,15,0.97);
             box-shadow: 0 4px 40px rgba(0,0,0,0.5);
         }
-
         .nav-logo {
             font-family: 'Cinzel', serif;
-            font-size: 1.2em;
+            font-size: 1.05em;
             font-weight: 700;
             color: var(--accent);
             letter-spacing: 0.08em;
             text-decoration: none;
         }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .nav-links { display: flex; align-items: center; gap: 8px; }
         .nav-link {
             color: var(--muted);
             text-decoration: none;
@@ -109,458 +99,221 @@
             transition: all 0.2s;
             letter-spacing: 0.03em;
         }
-
-        .nav-link:hover {
-            color: var(--text);
-            background: rgba(255,255,255,0.06);
-        }
-
+        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.06); }
         .nav-cta {
             background: linear-gradient(135deg, rgba(232,180,255,0.15), rgba(125,211,252,0.1));
             border: 1px solid rgba(232,180,255,0.3);
             color: var(--accent) !important;
-            border-radius: 8px;
         }
-
         .nav-cta:hover {
             background: linear-gradient(135deg, rgba(232,180,255,0.25), rgba(125,211,252,0.2)) !important;
             border-color: rgba(232,180,255,0.6) !important;
         }
 
-        /* Hamburger */
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: none;
-            padding: 8px;
-            border: none;
-            background: none;
+            display: none; flex-direction: column; gap: 5px;
+            cursor: none; padding: 8px; border: none; background: none;
         }
-
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all 0.3s;
-            display: block;
-        }
-
+        .hamburger span { width: 24px; height: 2px; background: var(--text); border-radius: 2px; transition: all 0.3s; display: block; }
         .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
         .hamburger.open span:nth-child(2) { opacity: 0; }
         .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
         .mobile-menu {
-            display: none;
-            position: fixed;
+            display: none; position: fixed;
             top: 64px; left: 0; right: 0;
             background: rgba(10,10,15,0.98);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
-            padding: 20px 5%;
-            z-index: 999;
-            flex-direction: column;
-            gap: 4px;
+            padding: 20px 5%; z-index: 999;
+            flex-direction: column; gap: 4px;
         }
-
         .mobile-menu.open { display: flex; }
         .mobile-menu .nav-link { font-size: 1em; padding: 12px 16px; }
 
         /* HERO */
         .hero {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             text-align: center;
             padding: 80px 5% 60px;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
+        .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12; animation: drift 12s ease-in-out infinite alternate; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, #e8b4ff, transparent); top: -100px; left: -100px; animation-duration: 14s; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, #7dd3fc, transparent); bottom: -50px; right: -100px; animation-duration: 10s; animation-delay: -3s; }
+        .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, #fbbf24, transparent); top: 40%; left: 60%; animation-duration: 18s; animation-delay: -6s; opacity: 0.07; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.05); } }
 
-        /* Animated background orbs */
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.12;
-            animation: drift 12s ease-in-out infinite alternate;
-        }
+        .stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .star { position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%; animation: twinkle var(--d, 3s) ease-in-out infinite alternate; opacity: var(--o, 0.3); }
+        @keyframes twinkle { from { opacity: var(--o, 0.3); transform: scale(1); } to { opacity: calc(var(--o, 0.3) * 0.3); transform: scale(0.5); } }
 
-        .orb-1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, #e8b4ff, transparent);
-            top: -100px; left: -100px;
-            animation-duration: 14s;
-        }
-
-        .orb-2 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, #7dd3fc, transparent);
-            bottom: -50px; right: -100px;
-            animation-duration: 10s;
-            animation-delay: -3s;
-        }
-
-        .orb-3 {
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, #fbbf24, transparent);
-            top: 40%; left: 60%;
-            animation-duration: 18s;
-            animation-delay: -6s;
-            opacity: 0.07;
-        }
-
-        @keyframes drift {
-            from { transform: translate(0, 0) scale(1); }
-            to { transform: translate(40px, 30px) scale(1.05); }
-        }
-
-        /* Star field */
-        .stars {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .star {
-            position: absolute;
-            width: 2px; height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
-            opacity: var(--o, 0.3);
-        }
-
-        @keyframes twinkle {
-            from { opacity: var(--o, 0.3); transform: scale(1); }
-            to { opacity: calc(var(--o, 0.3) * 0.3); transform: scale(0.5); }
-        }
-
-        .hero-eyebrow {
-            font-family: 'Nunito', sans-serif;
-            font-size: 0.8em;
-            font-weight: 700;
-            letter-spacing: 0.3em;
-            color: var(--accent2);
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            opacity: 0;
-            animation: slideUp 0.8s ease forwards 0.3s;
-        }
-
-        .hero-title {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(3em, 10vw, 7em);
-            font-weight: 900;
-            line-height: 1.0;
-            letter-spacing: -0.02em;
-            margin-bottom: 28px;
-            opacity: 0;
-            animation: slideUp 0.9s ease forwards 0.5s;
-        }
-
-        .hero-title span {
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: block;
-        }
-
-        .hero-sub {
-            font-size: clamp(1em, 2.5vw, 1.25em);
-            color: var(--muted);
-            max-width: 520px;
-            line-height: 1.7;
-            margin-bottom: 48px;
-            opacity: 0;
-            animation: slideUp 1s ease forwards 0.7s;
-        }
-
-        .hero-actions {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
-            opacity: 0;
-            animation: slideUp 1s ease forwards 0.9s;
-        }
+        .hero-eyebrow { font-size: 0.8em; font-weight: 700; letter-spacing: 0.3em; color: var(--accent2); text-transform: uppercase; margin-bottom: 24px; opacity: 0; animation: slideUp 0.8s ease forwards 0.3s; }
+        .hero-title { font-family: 'Cinzel', serif; font-size: clamp(3em, 10vw, 7em); font-weight: 900; line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 28px; opacity: 0; animation: slideUp 0.9s ease forwards 0.5s; }
+        .hero-title span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: block; }
+        .hero-sub { font-size: clamp(1em, 2.5vw, 1.25em); color: var(--muted); max-width: 520px; line-height: 1.7; margin-bottom: 48px; opacity: 0; animation: slideUp 1s ease forwards 0.7s; }
+        .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; opacity: 0; animation: slideUp 1s ease forwards 0.9s; }
 
         .btn-primary {
             padding: 14px 32px;
             background: linear-gradient(135deg, rgba(232,180,255,0.2), rgba(125,211,252,0.15));
             border: 1px solid rgba(232,180,255,0.4);
             color: var(--accent);
-            font-family: 'Nunito', sans-serif;
-            font-weight: 700;
-            font-size: 0.95em;
-            letter-spacing: 0.05em;
-            border-radius: 12px;
-            cursor: none;
-            text-decoration: none;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.95em;
+            letter-spacing: 0.05em; border-radius: 12px; cursor: none;
+            text-decoration: none; transition: all 0.3s;
         }
+        .btn-primary:hover { border-color: rgba(232,180,255,0.7); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(232,180,255,0.15); }
 
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(232,180,255,0.1), rgba(125,211,252,0.1));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .btn-primary:hover::before { opacity: 1; }
-        .btn-primary:hover {
-            border-color: rgba(232,180,255,0.7);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 32px rgba(232,180,255,0.15);
-        }
-
-        .btn-secondary {
-            padding: 14px 32px;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--muted);
-            font-family: 'Nunito', sans-serif;
-            font-weight: 600;
-            font-size: 0.95em;
-            letter-spacing: 0.05em;
-            border-radius: 12px;
-            cursor: none;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .btn-secondary:hover {
-            color: var(--text);
-            border-color: rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.04);
-        }
-
-        /* Scroll indicator */
         .scroll-hint {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            color: var(--muted);
-            font-size: 0.75em;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            opacity: 0;
-            animation: fadeIn 1s ease forwards 1.5s;
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: var(--muted); font-size: 0.75em; letter-spacing: 0.15em; text-transform: uppercase;
+            opacity: 0; animation: fadeIn 1s ease forwards 1.5s;
         }
+        .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--muted), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+        @keyframes scrollPulse { 0%,100% { transform: scaleY(1); opacity: 0.5; } 50% { transform: scaleY(1.2); opacity: 1; } }
 
-        .scroll-line {
-            width: 1px;
-            height: 40px;
-            background: linear-gradient(to bottom, var(--muted), transparent);
-            animation: scrollPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes scrollPulse {
-            0%, 100% { transform: scaleY(1); opacity: 0.5; }
-            50% { transform: scaleY(1.2); opacity: 1; }
-        }
-
-        /* STATS STRIP */
-        .stats-strip {
-            display: flex;
-            justify-content: center;
-            gap: 0;
-            padding: 0 5%;
-            margin: 0 auto 80px;
-            max-width: 900px;
-        }
-
+        /* STATS */
+        .stats-strip { display: flex; justify-content: center; max-width: 900px; margin: 0 auto; padding: 0 5%; }
         .stat-item {
-            flex: 1;
-            text-align: center;
-            padding: 40px 20px;
+            flex: 1; text-align: center; padding: 40px 20px;
             border: 1px solid var(--border);
-            position: relative;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease;
+            opacity: 0; transform: translateY(20px); transition: all 0.6s ease;
         }
-
         .stat-item:not(:first-child) { border-left: none; }
         .stat-item:first-child { border-radius: 16px 0 0 16px; }
         .stat-item:last-child { border-radius: 0 16px 16px 0; }
-
-        .stat-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .stat-num {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(2em, 5vw, 3em);
-            font-weight: 700;
-            color: var(--accent);
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 0.8em;
-            color: var(--muted);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
+        .stat-item.visible { opacity: 1; transform: translateY(0); }
+        .stat-num { font-family: 'Cinzel', serif; font-size: clamp(2em, 5vw, 3em); font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+        .stat-label { font-size: 0.8em; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 
         /* MARQUEE */
-        .marquee-section {
-            padding: 60px 0;
-            overflow: hidden;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 80px;
-        }
-
-        .marquee-track {
-            display: flex;
-            gap: 40px;
-            white-space: nowrap;
-            animation: marquee 25s linear infinite;
-        }
-
+        .marquee-section { padding: 60px 0; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-top: 80px; }
+        .marquee-track { display: flex; gap: 40px; white-space: nowrap; animation: marquee 30s linear infinite; }
         .marquee-track:hover { animation-play-state: paused; }
+        .marquee-item { font-family: 'Cinzel', serif; font-size: 0.85em; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; flex-shrink: 0; }
+        .marquee-item span { color: var(--accent); margin: 0 20px; }
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        .marquee-item {
-            font-family: 'Cinzel', serif;
-            font-size: 0.85em;
-            letter-spacing: 0.2em;
-            color: var(--muted);
-            text-transform: uppercase;
-            flex-shrink: 0;
+        /* ===== JOURNEY ===== */
+        .journey-section { max-width: 1100px; margin: 0 auto; padding: 100px 5% 60px; }
+
+        .journey-header { text-align: center; margin-bottom: 90px; opacity: 0; transform: translateY(24px); transition: all 0.7s ease; }
+        .journey-header.visible { opacity: 1; transform: translateY(0); }
+        .journey-eyebrow { font-size: 0.75em; letter-spacing: 0.3em; color: var(--accent2); text-transform: uppercase; font-weight: 700; margin-bottom: 14px; display: block; }
+        .journey-title { font-family: 'Cinzel', serif; font-size: clamp(1.8em, 4vw, 2.8em); font-weight: 700; line-height: 1.2; }
+
+        .chapter-block { margin-bottom: 100px; }
+
+        .chapter-label {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 48px;
+            opacity: 0; transform: translateX(-20px); transition: all 0.6s ease;
+        }
+        .chapter-label.visible { opacity: 1; transform: translateX(0); }
+        .chapter-num { font-family: 'Cinzel', serif; font-size: 0.7em; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; opacity: 0.7; }
+        .chapter-line { flex: 1; height: 1px; background: var(--border); }
+        .chapter-name { font-family: 'Cinzel', serif; font-size: 1em; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        /* Journey row */
+        .journey-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; margin-bottom: 72px;
+            opacity: 0; transform: translateY(40px); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .journey-row.visible { opacity: 1; transform: translateY(0); }
+        .journey-row.flip .journey-card { order: 2; }
+        .journey-row.flip .journey-text { order: 1; }
+
+        /* Card */
+        .journey-card { position: relative; }
+        .journey-card::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; width: 80%; height: 80%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(232,180,255,0.07), transparent 70%);
+            border-radius: 50%; pointer-events: none; z-index: -1;
         }
 
-        .marquee-item span {
-            color: var(--accent);
-            margin: 0 20px;
+        .journey-card-inner {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; overflow: hidden;
+            position: relative; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s;
+            text-decoration: none; display: block; color: inherit;
         }
+        .journey-card-inner:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,180,255,0.15); }
 
-        @keyframes marquee {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
+        .journey-img-wrap { position: relative; width: 100%; padding-top: 140%; overflow: hidden; }
+        .journey-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.5s ease; background: var(--surface2); }
+        .journey-card-inner:hover .journey-img { transform: scale(1.05); }
+
+        .journey-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,10,15,0.88) 0%, transparent 55%); }
+
+        .journey-card-footer { padding: 18px 20px 20px; }
+        .journey-card-title { font-family: 'Cinzel', serif; font-size: 0.95em; font-weight: 700; letter-spacing: 0.03em; line-height: 1.3; }
+
+        .journey-mal-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 8px;
+            font-size: 0.7em; font-weight: 700; letter-spacing: 0.08em;
+            color: var(--muted); text-transform: uppercase;
+            transition: color 0.2s;
         }
+        .journey-card-inner:hover .journey-mal-badge { color: var(--accent); }
 
-        /* CTA */
-        .cta-section {
-            padding: 80px 5% 120px;
-            text-align: center;
-            position: relative;
+        /* Dual-card layout */
+        .dual-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dual-card-grid .journey-card-inner { border-radius: 14px; }
+        .dual-card-grid .journey-img-wrap { padding-top: 130%; }
+        .dual-card-grid .journey-card-title { font-size: 0.8em; }
+
+        /* Text */
+        .journey-text { display: flex; flex-direction: column; }
+        .award-label {
+            font-size: 0.72em; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 10px;
         }
+        .award-label::before { content: ''; width: 24px; height: 1px; background: var(--accent); opacity: 0.5; flex-shrink: 0; }
+        .award-name { font-family: 'Cinzel', serif; font-size: clamp(1.3em, 2.5vw, 1.8em); font-weight: 700; line-height: 1.2; margin-bottom: 16px; color: var(--text); }
+        .award-name-small { font-size: clamp(1.05em, 2vw, 1.35em); }
+        .award-desc { font-size: 0.92em; color: var(--muted); line-height: 1.8; }
 
-        .cta-inner {
-            max-width: 600px;
-            margin: 0 auto;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 60px 40px;
-            position: relative;
-            overflow: hidden;
-        }
+        /* Final CTA */
+        .final-cta { text-align: center; padding: 80px 5% 120px; }
+        .final-cta-eyebrow { font-size: 0.75em; letter-spacing: 0.3em; color: var(--accent2); text-transform: uppercase; font-weight: 700; margin-bottom: 20px; opacity: 0; transform: translateY(20px); transition: all 0.6s ease; display: block; }
+        .final-cta-eyebrow.visible { opacity: 1; transform: translateY(0); }
+        .final-cta-title { font-family: 'Cinzel', serif; font-size: clamp(1.8em, 4vw, 2.8em); font-weight: 700; margin-bottom: 20px; line-height: 1.2; opacity: 0; transform: translateY(20px); transition: all 0.6s ease 0.1s; }
+        .final-cta-title.visible { opacity: 1; transform: translateY(0); }
+        .final-cta-sub { color: var(--muted); font-size: 1em; line-height: 1.7; margin: 0 auto 40px; max-width: 480px; opacity: 0; transform: translateY(20px); transition: all 0.6s ease 0.2s; }
+        .final-cta-sub.visible { opacity: 1; transform: translateY(0); }
+        .final-cta-btn { opacity: 0; transform: translateY(20px); transition: all 0.6s ease 0.3s; }
+        .final-cta-btn.visible { opacity: 1; transform: translateY(0); }
 
-        .cta-inner::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at center, rgba(232,180,255,0.05), transparent 60%);
-            pointer-events: none;
-        }
+        /* Footer */
+        footer { border-top: 1px solid var(--border); padding: 40px 5%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .footer-brand { font-family: 'Cinzel', serif; font-size: 1em; color: var(--accent); letter-spacing: 0.1em; }
+        .footer-note { font-size: 0.8em; color: var(--muted); }
 
-        .cta-title {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(1.6em, 4vw, 2.2em);
-            margin-bottom: 16px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease;
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .cta-title.visible { opacity: 1; transform: translateY(0); }
-
-        .cta-sub {
-            color: var(--muted);
-            margin-bottom: 36px;
-            font-size: 1em;
-            line-height: 1.7;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease 0.1s;
-        }
-
-        .cta-sub.visible { opacity: 1; transform: translateY(0); }
-
-        .cta-btn {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s ease 0.2s;
-        }
-
-        .cta-btn.visible { opacity: 1; transform: translateY(0); }
-
-        /* FOOTER */
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 40px 5%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .footer-brand {
-            font-family: 'Cinzel', serif;
-            font-size: 1em;
-            color: var(--accent);
-            letter-spacing: 0.1em;
-        }
-
-        .footer-note {
-            font-size: 0.8em;
-            color: var(--muted);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Mobile */
         @media (max-width: 768px) {
             .nav-links { display: none; }
             .hamburger { display: flex; }
-            .stats-strip { flex-direction: column; gap: 0; }
+            .stats-strip { flex-direction: column; }
             .stat-item { border-left: 1px solid var(--border) !important; }
             .stat-item:first-child { border-radius: 16px 16px 0 0; border-bottom: none; }
             .stat-item:last-child { border-radius: 0 0 16px 16px; }
             .stat-item:not(:first-child):not(:last-child) { border-radius: 0; border-bottom: none; }
-            .cta-inner { padding: 40px 24px; }
             footer { flex-direction: column; text-align: center; }
             body { cursor: auto; }
             .cursor { display: none; }
+            .journey-row { grid-template-columns: 1fr; gap: 28px; }
+            .journey-row.flip .journey-card { order: 0; }
+            .journey-row.flip .journey-text { order: 1; }
+            .journey-img-wrap { padding-top: 62%; }
         }
     </style>
 </head>
@@ -569,7 +322,7 @@
     <div class="cursor" id="cursor"></div>
 
     <nav id="navbar">
-        <a href="index.html" class="nav-logo">ANIME VAULT</a>
+        <a href="index.html" class="nav-logo">MY ANIME JOURNAL</a>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Home</a>
             <a href="vault.html" class="nav-link">My List</a>
@@ -588,77 +341,388 @@
         <a href="vault.html" class="nav-link nav-cta">Browse ↗</a>
     </div>
 
+    <!-- HERO -->
     <section class="hero">
         <div class="stars" id="stars"></div>
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
-
         <p class="hero-eyebrow">✦ Personal Collection</p>
         <h1 class="hero-title">
             Welcome to<br>
-            <span>My Anime Vault</span>
+            <span>My Anime Journal</span>
         </h1>
         <p class="hero-sub">A curated archive of every series watched, scored, and remembered. Tracked with obsession, organised with care.</p>
-
         <div class="hero-actions">
-            <a href="vault.html" class="btn-primary">Explore the Vault →</a>
-            <a href="vault.html#analytics" class="btn-secondary">View Analytics</a>
+            <a href="vault.html" class="btn-primary">Explore the Journal →</a>
         </div>
-
         <div class="scroll-hint">
             <span>Scroll</span>
             <div class="scroll-line"></div>
         </div>
     </section>
 
+    <!-- STATS -->
     <div class="stats-strip" id="statsStrip">
-        <div class="stat-item">
-            <div class="stat-num" id="heroStatTotal">—</div>
-            <div class="stat-label">Titles Tracked</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-num" id="heroStatCompleted">—</div>
-            <div class="stat-label">Completed</div>
-        </div>
-        <div class="stat-item">
-            <div class="stat-num" id="heroStatGenres">—</div>
-            <div class="stat-label">Unique Genres</div>
-        </div>
+        <div class="stat-item"><div class="stat-num" id="heroStatTotal">—</div><div class="stat-label">Titles Tracked</div></div>
+        <div class="stat-item"><div class="stat-num" id="heroStatCompleted">—</div><div class="stat-label">Completed</div></div>
+        <div class="stat-item"><div class="stat-num" id="heroStatGenres">—</div><div class="stat-label">Unique Genres</div></div>
     </div>
 
-    <div class="marquee-section">
-        <div class="marquee-track" id="marqueeTrack">
-            <!-- Populated by JS -->
-        </div>
-    </div>
+    <!-- MARQUEE -->
+    <div class="marquee-section"><div class="marquee-track" id="marqueeTrack"></div></div>
 
-    <section class="cta-section">
-        <div class="cta-inner">
-            <h2 class="cta-title">Ready to explore?</h2>
-            <p class="cta-sub">Dive into the full collection, filter by status, search by genre, and see the stats behind the watch history.</p>
-            <div class="cta-btn">
-                <a href="vault.html" class="btn-primary" style="font-size:1.05em; padding:16px 40px;">Enter the Vault →</a>
+    <!-- JOURNEY -->
+    <section class="journey-section">
+
+        <div class="journey-header">
+            <span class="journey-eyebrow">The Highlights</span>
+            <h2 class="journey-title">A Personal Journey<br>Through Anime</h2>
+        </div>
+
+        <!-- Chapter 1 -->
+        <div class="chapter-block">
+            <div class="chapter-label">
+                <span class="chapter-num">Chapter 01</span>
+                <div class="chapter-line"></div>
+                <span class="chapter-name">Emotional Rollercoasters</span>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/33352" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="33352" alt="Violet Evergarden">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Violet Evergarden</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Made Me Cry the Most</span>
+                    <div class="award-name">Violet Evergarden</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/42897" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="42897" alt="Horimiya">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Horimiya</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">The Ultimate Comfort Watch</span>
+                    <div class="award-name">Horimiya</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/23273" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="23273" alt="Your Lie in April">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Your Lie in April</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">The Show That Broke Me</span>
+                    <div class="award-name">Your Lie in April</div>
+                    <p class="award-desc"></p>
+                </div>
             </div>
         </div>
+
+        <!-- Chapter 2 -->
+        <div class="chapter-block">
+            <div class="chapter-label">
+                <span class="chapter-num">Chapter 02</span>
+                <div class="chapter-line"></div>
+                <span class="chapter-name">The Personal Journey</span>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/20" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="20" alt="Naruto">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Naruto</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">The One That Started It All</span>
+                    <div class="award-name">Naruto</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/39535" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="39535" alt="Mushoku Tensei">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Mushoku Tensei: Jobless Reincarnation</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">The Masterpiece I Almost Dropped</span>
+                    <div class="award-name">Mushoku Tensei</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <div class="dual-card-grid">
+                        <a class="journey-card-inner" href="https://myanimelist.net/anime/23273" target="_blank" rel="noopener">
+                            <div class="journey-img-wrap">
+                                <img class="journey-img" data-mal-id="23273" alt="Your Lie in April">
+                                <div class="journey-img-overlay"></div>
+                            </div>
+                            <div class="journey-card-footer">
+                                <div class="journey-card-title">Your Lie in April</div>
+                                <div class="journey-mal-badge">↗</div>
+                            </div>
+                        </a>
+                        <a class="journey-card-inner" href="https://myanimelist.net/anime/42897" target="_blank" rel="noopener">
+                            <div class="journey-img-wrap">
+                                <img class="journey-img" data-mal-id="42897" alt="Horimiya">
+                                <div class="journey-img-overlay"></div>
+                            </div>
+                            <div class="journey-card-footer">
+                                <div class="journey-card-title">Horimiya</div>
+                                <div class="journey-mal-badge">↗</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Most Rewatched</span>
+                    <div class="award-name award-name-small">Your Lie in April & Horimiya</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/50593" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="50593" alt="The Tunnel to Summer, the Exit of Goodbyes">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">The Tunnel to Summer, the Exit of Goodbyes</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Changed My Perspective</span>
+                    <div class="award-name">The Tunnel to Summer, the Exit of Goodbyes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapter 3 -->
+        <div class="chapter-block">
+            <div class="chapter-label">
+                <span class="chapter-num">Chapter 03</span>
+                <div class="chapter-line"></div>
+                <span class="chapter-name">Technical & Artistic Masterpieces</span>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/38000" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="38000" alt="Demon Slayer">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Demon Slayer: Kimetsu no Yaiba</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Peak Animation</span>
+                    <div class="award-name">Demon Slayer</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/54595" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="54492" alt="The Apothecary Diaries">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">The Apothecary Diaries</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Unskippable Soundtrack</span>
+                    <div class="award-name">The Apothecary Diaries</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/431" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="431" alt="Howl's Moving Castle">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Howl's Moving Castle</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Best Worldbuilding</span>
+                    <div class="award-name">Howl's Moving Castle</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chapter 4 -->
+        <div class="chapter-block">
+            <div class="chapter-label">
+                <span class="chapter-num">Chapter 04</span>
+                <div class="chapter-line"></div>
+                <span class="chapter-name">Fun & Niche Awards</span>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/48789" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="48736" alt="My Dress-Up Darling">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">My Dress-Up Darling</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">The Guilty Pleasure</span>
+                    <div class="award-name">My Dress-Up Darling</div>
+                    <p class="award-desc">Objectively a 6/10. In your heart, a 10/10. You know exactly why, and you have absolutely no regrets whatsoever.</p>
+                </div>
+            </div>
+
+            <div class="journey-row flip">
+                <div class="journey-card">
+                    <a class="journey-card-inner" href="https://myanimelist.net/anime/1535" target="_blank" rel="noopener">
+                        <div class="journey-img-wrap">
+                            <img class="journey-img" data-mal-id="1535" alt="Death Note">
+                            <div class="journey-img-overlay"></div>
+                        </div>
+                        <div class="journey-card-footer">
+                            <div class="journey-card-title">Death Note</div>
+                            <div class="journey-mal-badge">View on MAL ↗</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Best Villain of All Time</span>
+                    <div class="award-name">Death Note</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+
+            <div class="journey-row">
+                <div class="journey-card">
+                    <div class="dual-card-grid">
+                        <a class="journey-card-inner" href="https://myanimelist.net/anime/54233" target="_blank" rel="noopener">
+                            <div class="journey-img-wrap">
+                                <img class="journey-img" data-mal-id="59845" alt="A Fragrant Flower Blooms with Dignity">
+                                <div class="journey-img-overlay"></div>
+                            </div>
+                            <div class="journey-card-footer">
+                                <div class="journey-card-title">A Fragrant Flower Blooms with Dignity</div>
+                                <div class="journey-mal-badge">↗</div>
+                            </div>
+                        </a>
+                        <a class="journey-card-inner" href="https://myanimelist.net/anime/39535" target="_blank" rel="noopener">
+                            <div class="journey-img-wrap">
+                                <img class="journey-img" data-mal-id="39535" alt="Mushoku Tensei">
+                                <div class="journey-img-overlay"></div>
+                            </div>
+                            <div class="journey-card-footer">
+                                <div class="journey-card-title">Mushoku Tensei</div>
+                                <div class="journey-mal-badge">↗</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="journey-text">
+                    <span class="award-label">Binged in One Night</span>
+                    <div class="award-name award-name-small">A Fragrant Flower & Mushoku Tensei</div>
+                    <p class="award-desc"></p>
+                </div>
+            </div>
+        </div>
+
     </section>
 
+    <!-- FINAL CTA -->
+    <div class="final-cta">
+        <span class="final-cta-eyebrow">The Full Collection</span>
+        <h2 class="final-cta-title">There's so much more<br>in the journal</h2>
+        <p class="final-cta-sub">These were just the highlights. The full list holds every title watched, every genre explored, every rating given.</p>
+        <div class="final-cta-btn">
+            <a href="vault.html" class="btn-primary" style="font-size:1.05em; padding:16px 40px;">Browse the Full List →</a>
+        </div>
+    </div>
+
     <footer>
-        <div class="footer-brand">ANIME VAULT</div>
+        <div class="footer-brand">MY ANIME JOURNAL</div>
         <div class="footer-note">Built with ♥ · Data from MyAnimeList via Jikan API</div>
     </footer>
 
     <script>
-        // Cursor — instant, no lag
+        // Cursor
         const cursor = document.getElementById('cursor');
-        let mx = 0, my = 0;
-
         document.addEventListener('mousemove', e => {
-            mx = e.clientX; my = e.clientY;
-            cursor.style.left = mx + 'px';
-            cursor.style.top = my + 'px';
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
         });
-
         document.querySelectorAll('a, button, .stat-item').forEach(el => {
             el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
             el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
@@ -669,13 +733,7 @@
         for (let i = 0; i < 80; i++) {
             const s = document.createElement('div');
             s.className = 'star';
-            s.style.cssText = `
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                --d: ${2 + Math.random() * 4}s;
-                --o: ${0.1 + Math.random() * 0.5};
-                animation-delay: ${Math.random() * 5}s;
-            `;
+            s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--o:${0.1+Math.random()*0.5};animation-delay:${Math.random()*5}s;`;
             starsEl.appendChild(s);
         }
 
@@ -690,45 +748,56 @@
             document.getElementById('mobileMenu').classList.toggle('open');
         }
 
-        // Intersection Observer for animations
+        // Scroll reveal
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, idx) => {
                 if (entry.isIntersecting) {
-                    setTimeout(() => entry.target.classList.add('visible'), idx * 80);
+                    setTimeout(() => entry.target.classList.add('visible'), idx * 60);
                     observer.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.15 });
+        }, { threshold: 0.1 });
 
-        document.querySelectorAll('.stat-item, .cta-title, .cta-sub, .cta-btn').forEach(el => observer.observe(el));
+        document.querySelectorAll(
+            '.stat-item, .journey-header, .chapter-label, .journey-row, ' +
+            '.final-cta-eyebrow, .final-cta-title, .final-cta-sub, .final-cta-btn'
+        ).forEach(el => observer.observe(el));
 
-        // Load data.json for stats & marquee
+        // Data
         fetch('./data.json')
             .then(r => r.json())
             .then(data => {
                 const completed = data.filter(a => a.status === 'Completed').length;
                 const genres = new Set(data.flatMap(a => a.genres));
-
                 animateCount('heroStatTotal', data.length);
                 animateCount('heroStatCompleted', completed);
                 animateCount('heroStatGenres', genres.size);
 
-                // Marquee
-                const titles = data.map(a => a.title).sort(() => Math.random() - 0.5).slice(0, 20);
-                const track = document.getElementById('marqueeTrack');
+                // Build MAL id -> image URL lookup and hydrate all journey cards
+                const imageMap = {};
+                data.forEach(a => { if (a.id && a.image) imageMap[String(a.id)] = a.image; });
+
+                document.querySelectorAll('img.journey-img[data-mal-id]').forEach(img => {
+                    const url = imageMap[img.getAttribute('data-mal-id')];
+                    img.src = url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22480%22 height=%22270%22%3E%3Crect width=%22480%22 height=%22270%22 fill=%22%2313131a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%236b7280%22 font-size=%2214%22 font-family=%22sans-serif%22%3ENo Image%3C/text%3E%3C/svg%3E';
+                });
+
+                const titles = data.map(a => a.title).sort(() => Math.random() - 0.5).slice(0, 24);
                 const doubled = [...titles, ...titles];
-                track.innerHTML = doubled.map((t, i) => 
-                    `<span class="marquee-item">${t}${i % 3 === 1 ? '<span>✦</span>' : ''}</span>`
+                document.getElementById('marqueeTrack').innerHTML = doubled.map((t, i) =>
+                    `<span class="marquee-item">${t}${i % 4 === 2 ? '<span>✦</span>' : ''}</span>`
                 ).join('');
             })
             .catch(() => {
-                ['heroStatTotal','heroStatCompleted','heroStatScore','heroStatGenres'].forEach(id => {
-                    document.getElementById(id).textContent = '?';
+                ['heroStatTotal','heroStatCompleted','heroStatGenres'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = '—';
                 });
             });
 
         function animateCount(id, target) {
             const el = document.getElementById(id);
+            if (!el) return;
             let current = 0;
             const step = Math.ceil(target / 60);
             const interval = setInterval(() => {

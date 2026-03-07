@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon-16x16.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -54,13 +54,13 @@
             z-index: 99999;
             transform: translate(-50%, -50%);
             transition: width 0.15s, height 0.15s, background 0.15s;
-            box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(232,180,255,0.3);
+            box-shadow: 0 0 10px var(--accent), 0 0 20px rgba(232,180,255,0.3);  /* ← the blur */
         }
-
         .cursor.hovering {
-            width: 20px; height: 20px;
-            background: rgba(232,180,255,0.3);
-            box-shadow: 0 0 16px var(--accent);
+            width: 28px; height: 28px;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
         }
 
         /* NAV */
@@ -502,6 +502,100 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Genre filter pills + results inside analytics */
+        .genre-filter-bar {
+            margin-top: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            min-height: 36px;
+        }
+
+        .genre-filter-label {
+            font-size: 0.75em;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .genre-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            cursor: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .genre-pill-remove {
+            font-size: 1em;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .genre-pill:hover .genre-pill-remove { opacity: 1; }
+
+        .genre-clear-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.78em;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: none;
+            transition: all 0.2s;
+        }
+        .genre-clear-btn:hover { border-color: rgba(232,180,255,0.4); color: var(--accent); }
+
+        .chart-hint {
+            text-align: center;
+            font-size: 0.78em;
+            color: var(--muted);
+            margin-top: 14px;
+            letter-spacing: 0.05em;
+        }
+
+        /* Genre results section */
+        #genreResults {
+            margin-top: 40px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .genre-results-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .genre-results-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .genre-results-count {
+            font-size: 0.85em;
+            color: var(--muted);
+        }
+
+        /* Reuse anime-grid styles but scope to analytics */
+        #genreResults .anime-grid {
+            margin-bottom: 0;
+        }
+
         /* Mobile */
         @media (max-width: 900px) {
             .nav-status-tabs { display: none; }
@@ -589,6 +683,12 @@
             <div class="chart-wrap">
                 <canvas id="genreChart"></canvas>
             </div>
+
+            <p class="chart-hint">Click a slice or legend item to filter · Click again to deselect · Select multiple to intersect</p>
+
+            <div class="genre-filter-bar" id="genreFilterBar"></div>
+
+            <div id="genreResults"></div>
         </div>
     </div>
 
@@ -599,6 +699,11 @@
         let currentPage = 1;
         const ITEMS_PER_PAGE = 24;
         let genreChartInstance = null;
+        let selectedGenres = new Set();
+        const CHART_COLORS = [
+            '#e8b4ff','#7dd3fc','#fbbf24','#86efac','#f9a8d4',
+            '#c4b5fd','#67e8f9','#fde68a','#a7f3d0','#fed7aa'
+        ];
 
         // Cursor — instant, no lag
         const cursor = document.getElementById('cursor');
@@ -860,17 +965,20 @@
                     labels,
                     datasets: [{
                         data,
-                        backgroundColor: [
-                            '#e8b4ff','#7dd3fc','#fbbf24','#86efac','#f9a8d4',
-                            '#c4b5fd','#67e8f9','#fde68a','#a7f3d0','#fed7aa'
-                        ],
-                        borderWidth: 0,
-                        hoverOffset: 14
+                        backgroundColor: CHART_COLORS,
+                        borderWidth: 2,
+                        borderColor: 'transparent',
+                        hoverOffset: 16
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (!elements.length) return;
+                        const genre = labels[elements[0].index];
+                        toggleGenreFilter(genre, elements[0].index);
+                    },
                     plugins: {
                         legend: {
                             position: 'right',
@@ -880,16 +988,157 @@
                                 font: { size: 13, family: 'Nunito' },
                                 usePointStyle: true,
                                 pointStyleWidth: 10
+                            },
+                            onClick: (event, legendItem, legend) => {
+                                const genre = legendItem.text;
+                                toggleGenreFilter(genre, legendItem.index);
                             }
                         },
                         tooltip: {
                             callbacks: {
-                                label: ctx => ` ${ctx.label}: ${ctx.raw} titles`
+                                label: ctx => {
+                                    const active = selectedGenres.has(ctx.label);
+                                    return ` ${ctx.label}: ${ctx.raw} titles${active ? '  ✓ selected' : '  — click to filter'}`;
+                                }
                             }
                         }
                     }
                 }
             });
+
+            // Re-render results if genres are already selected (e.g. revisiting analytics)
+            renderGenreResults();
+        }
+
+        function toggleGenreFilter(genre, colorIndex) {
+            if (selectedGenres.has(genre)) {
+                selectedGenres.delete(genre);
+            } else {
+                selectedGenres.add(genre);
+            }
+            updateChartBorders();
+            renderFilterPills();
+            renderGenreResults();
+        }
+
+        function updateChartBorders() {
+            if (!genreChartInstance) return;
+            const labels = genreChartInstance.data.labels;
+            genreChartInstance.data.datasets[0].borderColor = labels.map((label, i) =>
+                selectedGenres.has(label) ? '#fff' : 'transparent'
+            );
+            genreChartInstance.data.datasets[0].borderWidth = labels.map((label, i) =>
+                selectedGenres.has(label) ? 3 : 2
+            );
+            genreChartInstance.data.datasets[0].hoverOffset = 16;
+            genreChartInstance.update();
+        }
+
+        function renderFilterPills() {
+            const bar = document.getElementById('genreFilterBar');
+            bar.innerHTML = '';
+
+            if (selectedGenres.size === 0) return;
+
+            const label = document.createElement('span');
+            label.className = 'genre-filter-label';
+            label.textContent = 'Filtering by:';
+            bar.appendChild(label);
+
+            const labels = genreChartInstance ? genreChartInstance.data.labels : [];
+
+            selectedGenres.forEach(genre => {
+                const colorIndex = labels.indexOf(genre);
+                const color = CHART_COLORS[colorIndex] || '#e8b4ff';
+
+                const pill = document.createElement('span');
+                pill.className = 'genre-pill';
+                pill.style.background = color + '22';
+                pill.style.borderColor = color + '88';
+                pill.style.color = color;
+                pill.innerHTML = `${genre} <span class="genre-pill-remove">×</span>`;
+                pill.addEventListener('click', () => {
+                    selectedGenres.delete(genre);
+                    updateChartBorders();
+                    renderFilterPills();
+                    renderGenreResults();
+                });
+                addCursorInteraction(pill);
+                bar.appendChild(pill);
+            });
+
+            if (selectedGenres.size > 1) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'genre-clear-btn';
+                clearBtn.textContent = 'Clear all';
+                clearBtn.addEventListener('click', () => {
+                    selectedGenres.clear();
+                    updateChartBorders();
+                    renderFilterPills();
+                    renderGenreResults();
+                });
+                addCursorInteraction(clearBtn);
+                bar.appendChild(clearBtn);
+            }
+        }
+
+        function renderGenreResults() {
+            const container = document.getElementById('genreResults');
+
+            if (selectedGenres.size === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            // AND filter — anime must have ALL selected genres
+            const matched = allAnime.filter(a =>
+                [...selectedGenres].every(g => a.genres.includes(g))
+            );
+
+            const genreList = [...selectedGenres].join(' + ');
+            const titleText = selectedGenres.size === 1
+                ? `${[...selectedGenres][0]}`
+                : `${genreList}`;
+
+            let html = `
+                <div class="genre-results-header">
+                    <span class="genre-results-title">${titleText}</span>
+                    <span class="genre-results-count">${matched.length} ${matched.length === 1 ? 'title' : 'titles'}</span>
+                </div>`;
+
+            if (matched.length === 0) {
+                html += `<div class="empty-state">
+                    <div class="empty-icon" style="font-size:2em;margin-bottom:12px;">⚡</div>
+                    <p>No anime found with all selected genres together.</p>
+                </div>`;
+            } else {
+                html += '<div class="anime-grid" style="margin-bottom:40px;">';
+                matched.forEach((anime, i) => {
+                    const genresHtml = anime.genres.slice(0, 3).map(g => {
+                        const isActive = selectedGenres.has(g);
+                        const colorIndex = genreChartInstance ? genreChartInstance.data.labels.indexOf(g) : -1;
+                        const color = isActive && colorIndex >= 0 ? CHART_COLORS[colorIndex] : null;
+                        const style = color ? `background:${color}22;border-color:${color}88;color:${color};` : '';
+                        return `<span class="genre-tag" style="${style}">${g}</span>`;
+                    }).join('');
+                    const scoreHtml = anime.score > 0 ? `<div class="card-score">★ ${anime.score}</div>` : '';
+                    html += `
+                        <a class="anime-card visible" href="https://myanimelist.net/anime/${anime.id}" target="_blank" rel="noopener noreferrer">
+                            <div class="card-image-wrap">
+                                <img class="anime-cover" src="${anime.image || ''}" loading="lazy" alt="${anime.title}"
+                                    onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22180%22 height=%22252%22 fill=%22%231c1c26%22%3E%3Crect width=%22180%22 height=%22252%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%236b7280%22 font-size=%2212%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                ${scoreHtml}
+                            </div>
+                            <div class="card-body">
+                                <div class="card-title">${anime.title}</div>
+                                <div class="genre-container">${genresHtml}</div>
+                            </div>
+                        </a>`;
+                });
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
         }
     </script>
 </body>
