@@ -131,18 +131,6 @@
         ]
     },
     {
-        "id": "4835",
-        "title": "Bleach the Movie: Fade to Black",
-        "status": "Completed",
-        "score": 0,
-        "image": "https://myanimelist.net/images/anime/1633/134491l.jpg",
-        "genres": [
-            "Action",
-            "Adventure",
-            "Supernatural"
-        ]
-    },
-    {
         "id": "31043",
         "title": "Erased",
         "status": "Completed",
@@ -407,17 +395,6 @@
         "genres": [
             "Drama",
             "Romance"
-        ]
-    },
-    {
-        "id": "36789",
-        "title": "Golden Time",
-        "status": "Completed",
-        "score": 0,
-        "image": "https://myanimelist.net/images/anime/3/89350l.jpg",
-        "genres": [
-            "Comedy",
-            "Fantasy"
         ]
     },
     {
@@ -2321,4 +2298,5 @@
             "Drama"
         ]
     }
+
 ]
